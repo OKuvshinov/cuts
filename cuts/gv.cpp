@@ -16,12 +16,21 @@ cut cuts[4] = {
 	{{{-2.0, 2.0}, {2.0, 2.0}}, CUT_DEFAULT},
 	{{{2.0, 2.0}, {2.0, -2.0}}, CUT_DEFAULT},
 	{{{2.0, -2.0}, {-2.0, -2.0}}, CUT_DEFAULT},
+
+	//{{{-2.0, 0}, {-2.0, 0}}, CUT_DEFAULT},
+	//{{{0, 2.0}, {0, 2.0}}, CUT_DEFAULT},
+	//{{{2.0, 0}, {2.0, 0}}, CUT_DEFAULT},
+	//{{{0, -2.0}, {0, -2.0}}, CUT_DEFAULT},
 };
+
+poly polygons[3] = { 0.0 };
 
 PointD start = {0.0}, stop = { 0.0 };
 double stepX = 0.0, stepY = 0.0;
-position optimalPosition = {0.0};
+position currentPosition = { 0.0 };
+position optimalPosition = { 0.0 };
 size_t numOfCuts = 0;
+size_t numOfPolys = 0;
 
 MyDialog *drawDialog;
 POINT* myPoints;

@@ -6,6 +6,8 @@
 #include <math.h>
 #include <stdint.h>
 
+#include "clipper2/clipper.h"
+
 #define my_min(a,b) ((a)<(b)?(a):(b))
 #define my_max(a,b) ((a)>(b)?(a):(b))
 
@@ -31,29 +33,58 @@ void init_cuts(void)
 	}
 }
 
+void init_poligons(void)
+{
+	numOfPolys = sizeof(polygons) / sizeof(polygons[0]);
+
+	for (size_t i = 0; i < numOfPolys; i++)
+	{
+		for (size_t j = 0; j < numOfCuts; j++)
+			polygons[i].edge[j] = cuts[j];	
+	}
+
+	for (uint8_t i = 0; i < numOfCuts; i++)
+	{
+		for (uint8_t j = 0; j < 2; j++)
+		{
+			polygons[0].edge[i].p[j].x -= 3.0;
+			polygons[0].edge[i].p[j].y -= 2.0;
+
+			polygons[1].edge[i].p[j].x += 0.0;
+			polygons[1].edge[i].p[j].y += 1.0;
+
+			polygons[2].edge[i].p[j].x += 3.0;
+			polygons[2].edge[i].p[j].y -= 2.0;
+		}
+	}
+}
+
 void find_area(void)
 {
-	start.x = cuts[0].p[0].x;
-	start.y = cuts[0].p[0].y;
+	start.x = polygons[0].edge[0].p[0].x;
+	start.y = polygons[0].edge[0].p[0].y;
 
 	stop.x = start.x;
 	stop.y = start.y;
 
-	for (size_t i = 0; i < numOfCuts; i++)
+	for (size_t i = 0; i < numOfPolys; i++)
 	{
-		for (uint8_t j = 0; j < 2; j++)
+		for (size_t j = 0; j < numOfCuts; j++)
 		{
-			if(cuts[i].p[j].x < start.x)
-				start.x = cuts[i].p[j].x;
+			for (uint8_t k = 0; k < 2; k++)
+			{
+				if (polygons[i].edge[j].p[k].x < start.x)
+					start.x = polygons[i].edge[j].p[k].x;
 
-			if (cuts[i].p[j].y < start.y)
-				start.y = cuts[i].p[j].y;
+				if (polygons[i].edge[j].p[k].y < start.y)
+					start.y = polygons[i].edge[j].p[k].y;
 
-			if (cuts[i].p[j].x > stop.x)
-				stop.x = cuts[i].p[j].x;
+				if (polygons[i].edge[j].p[k].x > stop.x)
+					stop.x = polygons[i].edge[j].p[k].x;
 
-			if (cuts[i].p[j].y > stop.y)
-				stop.y = cuts[i].p[j].y;
+				if (polygons[i].edge[j].p[k].y > stop.y)
+					stop.y = polygons[i].edge[j].p[k].y;
+			}
 		}
 	}
 
@@ -66,59 +97,125 @@ void find_area(void)
 void find_optimum(void)
 {
 	PointD currentPoint = { start.x, start.y };
-	position currentPosition = {0.0};
+	position currentPosition = { 0.0 };
+	//double tmpPos[2] = { 0.0 };
 
+	//uint32_t posCnt = 0;
+	//uint32_t optPosCnt = 0;
+
+	optimalPosition.distances = new myDistance[numOfPolys];
 	optimalPosition.maxDistance.dist = count_simple_distance(start, stop); // диагональ квадрата
 
 	for (currentPoint.x = start.x; currentPoint.x <= stop.x; currentPoint.x += stepX)
 	{
 		for (currentPoint.y = start.y; currentPoint.y <= stop.y; currentPoint.y += stepY)
 		{
+			//posCnt++;
+
+			//if (posCnt == 130)
+			//	int b = 0;
+
 			currentPosition = find_all_distances(currentPoint);
 
+			//tmpPos[0] = currentPosition.distances[0].dist;
+			//tmpPos[1] = currentPosition.distances[1].dist;
+
 			if (currentPosition.maxDistance.dist < optimalPosition.maxDistance.dist)
+			{
+				//optPosCnt = posCnt;
 				optimalPosition = currentPosition;
+			}
 		}
 	}
 
 	isOptimalFound = true;
 }
 
-position find_all_distances(PointD point)
+bool isPointOutOfPoly(PointD point, poly thePoly)
 {
-	position thisPosition = {0};
-
-	double simpleDistances[2] = { 0.0 };
-
-	thisPosition.maxDistance.dist = 0.0;
+	Clipper2Lib::PointD currentPoint;
+	Clipper2Lib::PathD currentPoly;
 
 	for (size_t i = 0; i < numOfCuts; i++)
 	{
-		thisPosition.distances[i].intsPoint = find_ints_point(point, cuts[i]);
+		currentPoint.x = thePoly.edge[i].p[0].x;
+		currentPoint.y = thePoly.edge[i].p[0].y;
 
-		if ((my_min(cuts[i].p[0].x, cuts[i].p[1].x) <= thisPosition.distances[i].intsPoint.x) && (thisPosition.distances[i].intsPoint.x <= my_max(cuts[i].p[0].x, cuts[i].p[1].x)) &&
-			(my_min(cuts[i].p[0].y, cuts[i].p[1].y) <= thisPosition.distances[i].intsPoint.y) && (thisPosition.distances[i].intsPoint.y <= my_max(cuts[i].p[0].y, cuts[i].p[1].y)))
-		{
-			thisPosition.distances[i].dist = count_simple_distance(point, thisPosition.distances[i].intsPoint);
-		}
-		else
-		{
-			for (uint8_t j = 0; j < 2; j++)
-			{
-				simpleDistances[j] = count_simple_distance(point, cuts[i].p[j]);
-			}
+		currentPoly.push_back(currentPoint);
+	}
 
-			if (simpleDistances[0] < simpleDistances[1])
+	currentPoint.x = point.x;
+	currentPoint.y = point.y;
+
+	if (Clipper2Lib::PointInPolygon(currentPoint, currentPoly) == Clipper2Lib::PointInPolygonResult::IsOutside)
+		return true;
+	else
+		return false;
+}
+
+myDistance find_distance_to_poly(PointD point, poly polygone)
+{
+	position thisPosition = { 0 };
+	double simpleDistances[2] = { 0.0 };
+
+	if (isPointOutOfPoly(point, polygone))
+	{
+		thisPosition.maxDistance.dist = count_simple_distance(start, stop); // диагональ квадрата
+		thisPosition.distances = new myDistance[numOfCuts];
+
+		for (size_t i = 0; i < numOfCuts; i++)
+		{
+			thisPosition.distances[i].intsPoint = find_ints_point(point, polygone.edge[i]);
+
+			if ((my_min(polygone.edge[i].p[0].x, polygone.edge[i].p[1].x) <= thisPosition.distances[i].intsPoint.x) && (thisPosition.distances[i].intsPoint.x <= my_max(polygone.edge[i].p[0].x, polygone.edge[i].p[1].x)) &&
+				(my_min(polygone.edge[i].p[0].y, polygone.edge[i].p[1].y) <= thisPosition.distances[i].intsPoint.y) && (thisPosition.distances[i].intsPoint.y <= my_max(polygone.edge[i].p[0].y, polygone.edge[i].p[1].y)))
 			{
-				thisPosition.distances[i].dist = simpleDistances[0];
-				thisPosition.distances[i].intsPoint = cuts[i].p[0];
+				thisPosition.distances[i].dist = count_simple_distance(point, thisPosition.distances[i].intsPoint);
 			}
 			else
 			{
-				thisPosition.distances[i].dist = simpleDistances[1];
-				thisPosition.distances[i].intsPoint = cuts[i].p[1];
+				for (uint8_t j = 0; j < 2; j++)
+				{
+					simpleDistances[j] = count_simple_distance(point, polygone.edge[i].p[j]);
+				}
+
+				if (simpleDistances[0] < simpleDistances[1])
+				{
+					thisPosition.distances[i].dist = simpleDistances[0];
+					thisPosition.distances[i].intsPoint = polygone.edge[i].p[0];
+				}
+				else
+				{
+					thisPosition.distances[i].dist = simpleDistances[1];
+					thisPosition.distances[i].intsPoint = polygone.edge[i].p[1];
+				}
 			}
+
+			if (thisPosition.distances[i].dist < thisPosition.maxDistance.dist)
+				thisPosition.maxDistance = thisPosition.distances[i];
 		}
+	}
+	else
+	{
+		thisPosition.maxDistance.dist = 0.0;
+		thisPosition.maxDistance.intsPoint = point;
+	}
+
+	thisPosition.point = point;
+
+	return thisPosition.maxDistance;
+}
+
+position find_all_distances(PointD point)
+{
+	position thisPosition = { 0 };
+
+	thisPosition.maxDistance.dist = 0.0;
+	thisPosition.distances = new myDistance[numOfPolys];
+
+	for (size_t i = 0; i < numOfPolys; i++)
+	{
+		thisPosition.distances[i] = find_distance_to_poly(point, polygons[i]);
 
 		if (thisPosition.distances[i].dist > thisPosition.maxDistance.dist)
 			thisPosition.maxDistance = thisPosition.distances[i];

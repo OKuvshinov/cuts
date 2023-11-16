@@ -29,28 +29,31 @@ typedef struct
 {
 	double dist;
 	PointD intsPoint;
-} distance;
+} myDistance;
 
 typedef struct
 {
 	PointD point;
-	distance distances[4];
-	distance maxDistance;
+	myDistance *distances;
+	myDistance maxDistance;
 } position;
 
 typedef struct
 {
-	cut edge[5];
+	cut edge[4];
 	bool isOnPoint;
 } poly;
 
 //////////
 
 extern cut cuts[4];
+extern poly polygons[3];
+
 extern PointD start, stop;
 extern double stepX, stepY;
 extern position optimalPosition;
 extern size_t numOfCuts;
+extern size_t numOfPolys;
 
 extern MyDialog *drawDialog;
 extern POINT* myPoints;

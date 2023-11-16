@@ -106,6 +106,7 @@ BOOL CcutsDlg::OnInitDialog()
 
 	// TODO: Add extra initialization here
 	init_cuts();
+	init_poligons();
 	init_draw_dialog();
 
 	return TRUE;  // return TRUE  unless you set the focus to a control
@@ -154,7 +155,7 @@ void CcutsDlg::OnPaint()
 		mydc = new CPaintDC(drawDialog);
 
 		mydc->SelectObject(&blackpen);
-		draw_cuts();
+		draw_polygons();
 
 		mydc->SelectObject(&redpen);	
 		draw_optimal_position();
