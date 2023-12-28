@@ -33,6 +33,8 @@ public:
 // Implementation
 protected:
 	DECLARE_MESSAGE_MAP()
+public:
+	
 };
 
 CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
@@ -61,6 +63,7 @@ CcutsDlg::CcutsDlg(CWnd* pParent /*=nullptr*/)
 void CcutsDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
+	DDX_Control(pDX, IDC_EDIT1, optimalPosValue);
 }
 
 BEGIN_MESSAGE_MAP(CcutsDlg, CDialogEx)
@@ -70,6 +73,7 @@ BEGIN_MESSAGE_MAP(CcutsDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON1, &CcutsDlg::button_find_area)
 	ON_BN_CLICKED(IDC_BUTTON2, &CcutsDlg::button_find_uptimum)
 	ON_BN_CLICKED(IDC_BUTTON3, &CcutsDlg::button_draw)
+	ON_BN_CLICKED(IDC_BUTTON4, &CcutsDlg::OnBnClickedButton4)
 END_MESSAGE_MAP()
 
 
@@ -154,8 +158,14 @@ void CcutsDlg::OnPaint()
 
 		mydc = new CPaintDC(drawDialog);
 
+		mydc->SelectObject(&bluepen);
+		draw_base();
+
 		mydc->SelectObject(&blackpen);
 		draw_polygons();
+
+		mydc->SelectObject(&greenpen);
+		draw_axis();
 
 		mydc->SelectObject(&redpen);	
 		draw_optimal_position();
@@ -181,7 +191,12 @@ void CcutsDlg::button_find_area()
 
 void CcutsDlg::button_find_uptimum()
 {
+	CString string;
+
 	find_optimum();
+
+	string.Format(_T("(%.2f, %.2f)"), optimalPosition.point.x, optimalPosition.point.y);
+	optimalPosValue.SetWindowTextW(string);
 	// TODO: Add your control notification handler code here
 }
 
@@ -190,5 +205,30 @@ void CcutsDlg::button_draw()
 {
 	drawDialog->InvalidateRect(drawArea);
 	OnPaint();
+	// TODO: Add your control notification handler code here
+}
+
+
+void CcutsDlg::OnBnClickedButton4()
+{
+	int myRandX = 0, myRandY = 0;
+
+	//for (size_t i = 0; i < numOfPolys; i++)
+	//{
+	//	myRandX = (rand() % 20) - 10;
+	//	myRandY = (rand() % 20) - 10;
+	//	for (size_t j = 0; j < numOfCuts; j++)
+	//	{
+	//		for (int k = 0; k < 2; k++)
+	//		{
+	//			polygons[i].edge[j].p[k].x = basePolygons[i].edge[j].p[k].x + myRandX;
+	//			polygons[i].edge[j].p[k].y = basePolygons[i].edge[j].p[k].y + myRandY;
+	//		}
+	//	}
+	//}
+
+	find_area();
+	find_optimum();
+	button_draw();
 	// TODO: Add your control notification handler code here
 }

@@ -22,3 +22,5 @@ void draw_polygons(void);
 void draw_cuts(poly thePolygone);
 void draw_optimal_position(void);
 void draw_x0(void);
+void draw_base(void);
+void draw_axis(void);

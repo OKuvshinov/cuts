@@ -58,3 +58,25 @@ void draw_x0(void)
 		mydc->Ellipse(currentPoint.x - 3, currentPoint.y - 3, currentPoint.x + 3, currentPoint.y + 3);
 	}
 }
+
+void draw_base(void)
+{
+	POINT *poly = new POINT[numOfCuts];
+
+	for (int i = 0; i < numOfCuts; i++)
+	{
+		poly[i].x = drawAreaCenter.x + (shifts[i].x * scaleDraw);
+		poly[i].y = drawAreaCenter.y - (shifts[i].y * scaleDraw);
+	}
+
+	mydc->Polygon(poly, numOfCuts);
+}
+
+void draw_axis(void)
+{
+	mydc->MoveTo(drawArea.left, drawAreaCenter.y);
+	mydc->LineTo(drawArea.right, drawAreaCenter.y);
+
+	mydc->MoveTo(drawAreaCenter.x, drawArea.bottom);
+	mydc->LineTo(drawAreaCenter.x, drawArea.top);
+}

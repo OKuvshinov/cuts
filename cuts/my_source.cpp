@@ -33,30 +33,69 @@ void init_cuts(void)
 	}
 }
 
+void init_cut(cut* currentCut)
+{
+	if ((int)(currentCut->p[0].x*1e6) == (int)(currentCut->p[1].x*1e6))
+	{
+		if ((int)(currentCut->p[0].y*1e6) == (int)(currentCut->p[1].y*1e6))
+			currentCut->type = CUT_ONE_POINT;
+		else
+			currentCut->type = CUT_VER;
+	}
+	else if ((int)(currentCut->p[0].y*1e6) == (int)(currentCut->p[1].y*1e6))
+		currentCut->type = CUT_HOR;
+	else
+		currentCut->type = CUT_DEFAULT;
+}
+
 void init_poligons(void)
 {
+	double angle = 45.0;
+
 	numOfPolys = sizeof(polygons) / sizeof(polygons[0]);
 
-	for (size_t i = 0; i < numOfPolys; i++)
-	{
-		for (size_t j = 0; j < numOfCuts; j++)
-			polygons[i].edge[j] = cuts[j];	
-	}
+	for (size_t i = 0; i < numOfCuts; i++)
+		basePolygone.edge[i] = cuts[i];
 
-	for (uint8_t i = 0; i < numOfCuts; i++)
+	for (int i = 0; i < numOfPolys; i++)
 	{
-		for (uint8_t j = 0; j < 2; j++)
+		for (int j = 0; j < numOfCuts; j++)
 		{
-			polygons[0].edge[i].p[j].x -= 3.0;
-			polygons[0].edge[i].p[j].y -= 2.0;
+			for (int k = 0; k < 2; k++)
+			{
+				polygons[i].edge[j].p[k].x = basePolygone.edge[j].p[k].x*cos(angle * (PI / 180.0)) + basePolygone.edge[j].p[k].y*sin(angle * (PI / 180.0));
+				polygons[i].edge[j].p[k].y = -1 * basePolygone.edge[j].p[k].x*sin(angle * (PI / 180.0)) + basePolygone.edge[j].p[k].y*cos(angle * (PI / 180.0));
 
-			polygons[1].edge[i].p[j].x += 0.0;
-			polygons[1].edge[i].p[j].y += 1.0;
+				polygons[i].edge[j].p[k].x += shifts[i].x;
+				polygons[i].edge[j].p[k].y += shifts[i].y;	
+			}
 
-			polygons[2].edge[i].p[j].x += 3.0;
-			polygons[2].edge[i].p[j].y -= 2.0;
+			init_cut(&polygons[i].edge[j]);
 		}
 	}
+
+	//for (size_t i = 0; i < numOfPolys; i++)
+	//{
+	//	for (size_t j = 0; j < numOfCuts; j++)
+	//		polygons[i].edge[j] = cuts[j];
+
+	//	basePolygone = polygons[i];
+	//}
+
+	//for (uint8_t i = 0; i < numOfCuts; i++)
+	//{
+	//	for (uint8_t j = 0; j < 2; j++)
+	//	{
+	//		polygons[0].edge[i].p[j].x -= 3.0;
+	//		polygons[0].edge[i].p[j].y -= 2.0;
+
+	//		polygons[1].edge[i].p[j].x += 0.0;
+	//		polygons[1].edge[i].p[j].y += 1.0;
+
+	//		polygons[2].edge[i].p[j].x += 3.0;
+	//		polygons[2].edge[i].p[j].y -= 2.0;
+	//	}
+	//}
 }
 
 void find_area(void)

@@ -47,7 +47,8 @@ typedef struct
 //////////
 
 extern cut cuts[4];
-extern poly polygons[3];
+extern poly polygons[4];
+extern poly basePolygone;
 
 extern PointD start, stop;
 extern double stepX, stepY;
@@ -69,6 +70,10 @@ extern POINT drawAreaCenter;
 
 extern double scaleDraw;
 extern bool isOptimalFound;
+
+extern PointD shifts[4];
+
+extern double PI;
 
 #define GLOBAL_VARIABLES_HEADER
 

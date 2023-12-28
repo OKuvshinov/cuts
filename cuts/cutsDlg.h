@@ -35,4 +35,6 @@ public:
 	afx_msg void button_find_area();
 	afx_msg void button_find_uptimum();
 	afx_msg void button_draw();
+	afx_msg void OnBnClickedButton4();
+	CEdit optimalPosValue;
 };
